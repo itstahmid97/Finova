@@ -1,6 +1,6 @@
 # Finova - Pro Expense & Meal Tracker 🚀
 
-![Finova Banner](https://via.placeholder.com/1000x400.png?text=Finova+-+Smart+Expense+%26+Meal+Tracker)
+
 
 **Finova** is a highly secure, smart, and fully responsive web application designed to track personal daily expenses and manage meal logs effortlessly. Built with a modern glass-morphism UI, it features real-time cloud synchronization, automated monthly archiving, and interactive visual reports.
 
