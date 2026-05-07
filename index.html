@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finova - Pro Expense Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="glass-nav" id="main-nav">
+        <div class="nav-logo text-black" onclick="switchPage('home-page')" style="cursor: pointer;">Finova<span class="text-orange">.</span></div>
+        
+        <button class="hamburger-btn" onclick="toggleMobileMenu()">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+
+        <div class="nav-menu" id="nav-menu">
+            <div class="nav-links">
+                <button class="nav-btn active" onclick="switchPage('home-page')"><i class="fa-solid fa-house"></i> Dashboard</button>
+                <button class="nav-btn" onclick="switchPage('segment-view-page')"><i class="fa-solid fa-chart-pie"></i> View Data</button>
+                <button class="nav-btn" onclick="switchPage('history-page')"><i class="fa-solid fa-clock-rotate-left"></i> Past Months</button>
+                <button class="nav-btn" onclick="switchPage('guideline-page')"><i class="fa-solid fa-book-open"></i> Guidelines</button>
+            </div>
+            
+            <div class="flex-row mobile-nav-actions">
+                <button class="meal-badge" onclick="toggleMealModal()">
+                    <i class="fa-solid fa-utensils"></i> <span id="nav-meal-count">0</span> Meals
+                </button>
+                <button id="auth-btn" class="btn-black" onclick="toggleAuth()"><i class="fa-solid fa-user"></i> Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="app-container" id="main-app">
+        
+        <section id="home-page" class="page active-page">
+            <div class="dashboard-header card animate-slide-up">
+                <div>
+                    <h3 class="text-black font-semibold"><i class="fa-solid fa-wallet text-orange"></i> Current Month Total</h3>
+                    <h1 id="total-cost" class="text-orange">৳ 0</h1>
+                </div>
+            </div>
+
+            <div class="main-grid">
+                
+                <div class="card animate-slide-up delay-1">
+                    <h3 class="card-title text-black"><i class="fa-solid fa-bolt text-orange"></i> Add Transaction</h3>
+                    
+                    <div class="form-group">
+                        <label class="text-black">Date & Time</label>
+                        <div class="datetime-grid">
+                            <input type="date" id="record-date" class="modern-input">
+                            <input type="time" id="record-time" class="modern-input">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="text-black">Category Segment</label>
+                        <select id="record-category" class="modern-input"></select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="text-black">Amount</label>
+                        <div class="input-with-icon">
+                            <span class="currency-icon text-orange">৳</span>
+                            <input type="number" id="record-amount" class="modern-input pl-40" placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="text-black">Description / Note</label>
+                        <input type="text" id="record-note" class="modern-input" placeholder="What did you spend on?">
+                    </div>
+                    
+                    <button onclick="addRecord()" class="btn-primary w-100"><i class="fa-solid fa-check-circle"></i> Save Record</button>
+                </div>
+
+                <div class="right-panel">
+                    <div class="card animate-slide-up delay-2" id="chart-card-container">
+                        <h3 class="card-title text-black"><i class="fa-solid fa-chart-line text-orange"></i> Current Month Trend</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="multiLineChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card bg-orange-light animate-slide-up delay-3" id="segments-card-container">
+                        <h3 class="card-title text-black"><i class="fa-solid fa-folder-tree text-orange"></i> Manage Segments</h3>
+                        <div class="flex-row">
+                            <input type="text" id="new-segment-input" class="modern-input" placeholder="New segment name...">
+                            <button onclick="addSegment()" class="btn-black">Add</button>
+                        </div>
+                        <div class="segment-list mt-15" id="segment-list-ui"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="segment-view-page" class="page">
+            <div class="card animate-slide-up" id="pdf-capture-area">
+                <div class="flex-between card-title">
+                    <h3 class="text-black"><i class="fa-solid fa-layer-group text-orange"></i> Segment Data & Report</h3>
+                    <button onclick="generateScreenshotPDF()" class="btn-outline" data-html2canvas-ignore><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+                </div>
+                <div class="form-group mt-15" data-html2canvas-ignore>
+                    <select id="view-segment-select" class="modern-input" onchange="renderSegmentDetails()"></select>
+                </div>
+                <div class="segment-summary-box">
+                    <h2 id="view-segment-name" class="text-black">Select Segment</h2>
+                    <h1 class="text-orange" id="view-segment-total">৳ 0</h1>
+                </div>
+                <div class="timeline" id="segment-timeline"></div>
+            </div>
+        </section>
+
+        <section id="history-page" class="page">
+            <div class="card animate-slide-up">
+                <div class="flex-between card-title">
+                    <h3 class="text-black"><i class="fa-solid fa-box-archive text-orange"></i> Past Months Archive</h3>
+                    <button onclick="deleteArchiveMonth()" class="btn-delete" id="delete-month-btn" style="display: none;"><i class="fa-solid fa-trash"></i> Delete Data</button>
+                </div>
+                <div class="form-group mt-15">
+                    <label class="text-black">Select Month to View</label>
+                    <select id="archive-month-select" class="modern-input" onchange="renderArchiveDetails()"></select>
+                </div>
+                <div class="segment-summary-box">
+                    <h2 id="archive-month-title" class="text-black">Month Name</h2>
+                    <h1 class="text-orange" id="archive-total-cost">৳ 0</h1>
+                    <p class="text-muted mt-10">Total Meals: <strong id="archive-total-meals" class="text-black">0</strong></p>
+                </div>
+                <div id="archive-breakdown" class="archive-grid"></div>
+            </div>
+        </section>
+
+        <section id="guideline-page" class="page">
+            <div class="card animate-slide-up" style="max-width: 900px; margin: 0 auto;">
+                <div class="flex-between card-title" style="margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px;">
+                    <h3 class="text-black" id="guide-title"><i class="fa-solid fa-book-open text-orange"></i> Comprehensive Guidelines</h3>
+                    <button class="btn-outline" style="padding: 8px 20px;" onclick="toggleGuideLang()" id="guide-lang-btn">Read in বাংলা</button>
+                </div>
+                <div id="guide-content" class="text-muted" style="font-size: 1.05rem; line-height: 1.8;">
+                    </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="auth-modal" class="modal-overlay">
+        <div class="auth-card animate-slide-up">
+            <button class="btn-close" style="position: absolute; top: 20px; right: 20px;" onclick="closeLoginModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="nav-logo" style="font-size: 2.2rem; margin-bottom: 5px;">Finova<span class="text-orange">.</span></div>
+            <h2>Welcome Back</h2>
+            <p>Please login to your account to securely save and sync your data across all devices.</p>
+            <button class="google-btn" onclick="doGoogleLogin()">
+                <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" alt="Google">
+                Continue with Google
+            </button>
+        </div>
+    </div>
+
+    <div id="meal-modal" class="modal-overlay">
+        <div class="modal-content card" style="max-width: 500px;">
+            <div class="flex-between card-title" style="margin-bottom: 10px;">
+                <h3 class="text-black"><i class="fa-solid fa-utensils text-orange"></i> Meal Manager</h3>
+                <button class="btn-close" onclick="toggleMealModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="meal-controls mt-10">
+                <div class="form-group">
+                    <label class="text-black">Select Date to Modify</label>
+                    <input type="date" id="meal-date-selector" class="modern-input" style="padding: 10px;">
+                </div>
+                <div class="flex-row">
+                    <button class="btn-outline w-100" onclick="modifySelectedMeal(-1)"><i class="fa-solid fa-minus"></i> 1 Meal</button>
+                    <button class="btn-outline w-100" onclick="modifySelectedMeal(1)"><i class="fa-solid fa-plus"></i> 1 Meal</button>
+                </div>
+            </div>
+            <div class="meal-history-section mt-15">
+                <h4 class="text-black mb-10" style="border-bottom: 1px solid #eee; padding-bottom: 5px;">Daily Meal Log</h4>
+                <div class="meal-history-list" id="meal-history-list" style="max-height: 250px; overflow-y: auto; padding-right: 5px;"></div>
+                <div class="meal-total-footer mt-15" style="border-top: 2px solid #e5e7eb; padding-top: 15px; text-align: right; display: flex; justify-content: space-between; align-items: center;">
+                    <p class="text-muted" style="font-size: 0.9rem;">Total for this month:</p>
+                    <h2 class="text-black"><span class="text-orange font-bold" id="modal-meal-grand-total" style="font-size: 2rem;">0</span> Meals</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p class="text-black">Developed by <span class="text-orange font-bold">S.M. Tahmid Hasan Shahria</span></p>
+        <a href="https://www.facebook.com/itstahmid" target="_blank" class="social-icon text-black"><i class="fa-brands fa-facebook"></i></a>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // GitHub Repository-এর জন্য Dummy Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID",
+            measurementId: "YOUR_MEASUREMENT_ID"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        window.firebaseAuth = getAuth(app);
+        window.firebaseDb = getFirestore(app);
+        window.googleProvider = new GoogleAuthProvider();
+        window.firebaseOnAuth = onAuthStateChanged;
+        window.firebaseDoc = doc;
+        window.firebaseSetDoc = setDoc;
+        window.firebaseGetDoc = getDoc;
+        window.firebaseSignOut = signOut;
+        window.firebaseSignIn = signInWithPopup;
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
